@@ -1,6 +1,8 @@
 import { LIFFProvider } from "../providers/liff-providers";
 import "./globals.css";
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: "LIFF App",
   icons: {
