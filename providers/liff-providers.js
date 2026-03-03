@@ -26,6 +26,9 @@ function LIFFProvider({ children }) {
         liff
           .init({ liffId: liffId })
           .then(() => {
+            if(!liff.isLoggedIn()){
+              liff.login();
+            }
             console.log("LIFF init succeeded.");
             setLiffObject(liff);
           })
