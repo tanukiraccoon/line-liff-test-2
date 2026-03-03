@@ -11,36 +11,36 @@ function LIFFProvider({ children }) {
   const [liffObject, setLiffObject] = useState(null);
   const [liffError, setLiffError] = useState(null);
 
-  // Execute liff.init() when the app is initialized
   useEffect(() => {
-    // to avoid `window is not defined` error
-    import("@line/liff")
-      .then((liff) => liff.default)
-      .then((liff) => {
+    const initLIFF = async () => {
+      try {
         console.log("LIFF init...");
+
+        const liffModule = await import("@line/liff");
+        const liff = liffModule.default;
+
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
         if (!liffId) {
           throw new Error("NEXT_PUBLIC_LIFF_ID is not defined.");
         }
 
-        liff
-          .init({ liffId: liffId })
-          .then(() => {
-            if(!liff.isLoggedIn()){
-              liff.login();
-            }
-            console.log("LIFF init succeeded.");
-            setLiffObject(liff);
-          })
-          .catch((error) => {
-            console.log("LIFF init failed.");
-            setLiffError(error.toString());
-          });
-      })
-      .catch((error) => {
+        await liff.init({ liffId });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return; // login แล้ว redirect ออกทันที
+        }
+
+        console.log("LIFF init succeeded.");
+        setLiffObject(liff);
+
+      } catch (error) {
         console.log("LIFF init failed.");
-        setLiffError(error.toString());
-      });
+        setLiffError(error?.toString() || "Unknown error");
+      }
+    };
+
+    initLIFF();
   }, []);
 
   const value = {
@@ -48,13 +48,17 @@ function LIFFProvider({ children }) {
     liffError: liffError,
   };
 
-  return <LIFFContext.Provider value={value}>{children}</LIFFContext.Provider>;
+  return (
+    <LIFFContext.Provider value={value}>
+      {children}
+    </LIFFContext.Provider>
+  );
 }
 
 function useLIFF() {
   const context = useContext(LIFFContext);
 
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useLIFF must be used within a LIFFProvider");
   }
 
